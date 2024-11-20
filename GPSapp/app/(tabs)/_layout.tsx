@@ -1,7 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-
 import { Mapa } from '@/components/Mapa';
 
 export default function TabLayout() {
@@ -16,7 +15,7 @@ export default function TabLayout() {
         style={styles.button}
       >
         <Text style={styles.buttonText}>
-          {showTraffic ? "Disable Traffic" : "Enable Traffic"}
+          {showTraffic ? "Dejar de mostrar tráfico" : "Mostrar tráfico"}
         </Text>
       </TouchableOpacity>
     </View>

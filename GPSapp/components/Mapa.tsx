@@ -1,7 +1,8 @@
 import MapView, { Marker } from 'react-native-maps';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import axios from 'axios';
 
 interface LocationCoords {
     latitude: number;
@@ -12,22 +13,60 @@ interface MapaProps {
     showsTraffic: boolean;
 }
 
-export function Mapa({showsTraffic}: MapaProps) {
+interface Restaurant {
+    id: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+}  
+
+export function Mapa({showsTraffic}: MapaProps){
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
+    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const GOOGLE_PLACES_API_KEY = "";
     
     useEffect(() => {
         (async () => {
             let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
+            if(status !== 'granted'){
                 console.log('Permiso de localización negado');
                 return;
             }
 
             let location = await Location.getCurrentPositionAsync({});
             setLocation(location);
-        })();
-    }, []);
-
+            if(location){
+                const { latitude, longitude } = location.coords;
+                const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=restaurant&key=${GOOGLE_PLACES_API_KEY}`;
+        
+                try {
+                    const response = await axios.get(url);
+                    const results = response.data.results;
+                    const mappedRestaurants = results.map((place: any) => ({
+                        id: place.place_id,
+                        name: place.name,
+                        latitude: place.geometry.location.lat,
+                        longitude: place.geometry.location.lng,
+                    }));
+                    setRestaurants(mappedRestaurants);
+                    } catch (error){
+                    console.error("Error fetching restaurants:", error);
+                    } finally {
+                    setLoading(false);
+                }
+            }
+            })();
+        }, []);
+        if(loading){
+            return (
+                <View style={styles.loading}>
+                    <ActivityIndicator size="large" color="#0000ff" />
+                </View>
+            );
+        }
+    
     return (
         <MapView
             style={styles.container}
@@ -39,15 +78,25 @@ export function Mapa({showsTraffic}: MapaProps) {
             }}
             showsTraffic={showsTraffic}
         >
-        {location && (
-            <Marker
-            coordinate={{
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            }}
-            title="Mi ubicación"
-            />
-        )}
+            {location && (
+                <Marker
+                    coordinate={{
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude,
+                    }}
+                    title="Mi ubicación"
+                />
+            )}
+            {restaurants.map((restaurant) => (
+                <Marker
+                    key={restaurant.id}
+                    coordinate={{
+                        latitude: restaurant.latitude,
+                        longitude: restaurant.longitude,
+                    }}
+                    title={restaurant.name}
+                />
+            ))}
         </MapView>
     );
 };
@@ -58,5 +107,10 @@ const styles = StyleSheet.create({
     },
     map: {
         zIndex: 0,
-    }
+    },
+    loading: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
