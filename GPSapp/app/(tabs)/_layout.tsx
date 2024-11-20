@@ -1,19 +1,44 @@
-import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
-
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 
 import { Mapa } from '@/components/Mapa';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const [showTraffic, setShowTraffic] = useState(false);
 
   return (
-    <Mapa />
+    <View style={styles.container}>
+      <Mapa showsTraffic={showTraffic} />
+      
+      <TouchableOpacity
+        onPress={() => setShowTraffic(!showTraffic)}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText}>
+          {showTraffic ? "Disable Traffic" : "Enable Traffic"}
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  button: {
+    position: 'absolute',
+    bottom: 60,
+    left: 20,
+    zIndex: 1,
+    backgroundColor: '#5b5bc2',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
